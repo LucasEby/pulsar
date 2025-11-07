@@ -19,7 +19,7 @@
 package org.apache.pulsar.broker;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
@@ -108,7 +108,7 @@ public class BrokerAdditionalServletTest extends MockedPulsarServiceBaseTest {
 
 
         AdditionalServlets brokerAdditionalServlets = Mockito.mock(AdditionalServlets.class);
-        Map<String, AdditionalServletWithClassLoader> map = new HashMap<>();
+        Map<String, AdditionalServletWithClassLoader> map = new LinkedHashMap<>();
         map.put("broker-additional-servlet", new AdditionalServletWithClassLoader(brokerAdditionalServlet, null));
         map.put("broker-additional-servlet-with-pulsar-service", new
                 AdditionalServletWithClassLoader(brokerAdditionalServletWithPulsarService, null));

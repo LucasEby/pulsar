@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import lombok.SneakyThrows;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.broker.service.plugin.EntryFilterDefinition;
@@ -40,8 +40,8 @@ public class MockEntryFilterProvider extends EntryFilterProvider {
 
     @SneakyThrows
     public void setMockEntryFilters(EntryFilterDefinition... defs) {
-        definitions = new HashMap<>();
-        cachedClassLoaders = new HashMap<>();
+        definitions = new LinkedHashMap<>();
+        cachedClassLoaders = new LinkedHashMap<>();
         brokerEntryFilters = new ArrayList<>();
 
         for (EntryFilterDefinition def : defs) {

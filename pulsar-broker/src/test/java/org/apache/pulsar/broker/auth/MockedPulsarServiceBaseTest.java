@@ -21,7 +21,6 @@ package org.apache.pulsar.broker.auth;
 import static org.apache.pulsar.broker.BrokerTestUtil.spyWithoutRecordingInvocations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.testng.Assert.assertEquals;
-import com.google.common.collect.Sets;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -31,7 +30,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -478,6 +477,7 @@ public abstract class MockedPulsarServiceBaseTest extends TestRetrySupport {
      * @return a PulsarTestContext.Builder instance
      */
     protected PulsarTestContext.Builder createPulsarTestContextBuilder(ServiceConfiguration conf) {
+        System.out.println("PulsarTestContext.Builder was called");
         PulsarTestContext.Builder builder = PulsarTestContext.builder()
                 .spyByDefault()
                 .config(conf)
@@ -541,6 +541,7 @@ public abstract class MockedPulsarServiceBaseTest extends TestRetrySupport {
     }
 
     protected PulsarTestContext.Builder createAdditionalPulsarTestContextBuilder(ServiceConfiguration conf) {
+        System.out.println("LINE 547");
         return createPulsarTestContextBuilder(conf)
                 .reuseSpyConfig(pulsarTestContext)
                 .reuseMockBookkeeperAndMetadataStores(pulsarTestContext);
@@ -560,9 +561,9 @@ public abstract class MockedPulsarServiceBaseTest extends TestRetrySupport {
         if (!admin.clusters().getClusters().contains(configClusterName)) {
             admin.clusters().createCluster(configClusterName, ClusterData.builder().build());
         }
-        Set<String> allowedClusters = new HashSet<>();
+        Set<String> allowedClusters = new LinkedHashSet<>();
         allowedClusters.add(configClusterName);
-        return new TenantInfoImpl(new HashSet<>(), allowedClusters);
+        return new TenantInfoImpl(new LinkedHashSet<>(), allowedClusters);
     }
 
 
@@ -616,8 +617,17 @@ public abstract class MockedPulsarServiceBaseTest extends TestRetrySupport {
         }
 
         if (!admin.tenants().getTenants().contains(tenant)) {
-            admin.tenants().createTenant(tenant, TenantInfo.builder().allowedClusters(
-                    Sets.newHashSet(configClusterName)).build());
+//            admin.tenants().createTenant(tenant, TenantInfo.builder().allowedClusters(
+//                    Sets.newHashSet(configClusterName)).build());
+            LinkedHashSet<String> clusters = new LinkedHashSet();
+            clusters.add(configClusterName);
+
+            admin.tenants().createTenant(
+                    tenant,
+                    TenantInfo.builder()
+                            .allowedClusters(clusters)
+                            .build()
+            );
         }
 
         if (!admin.namespaces().getNamespaces(tenant).contains(namespace)) {

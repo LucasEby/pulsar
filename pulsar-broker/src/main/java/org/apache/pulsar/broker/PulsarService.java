@@ -41,7 +41,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1174,15 +1174,19 @@ public class PulsarService implements AutoCloseable, ShutdownService {
                                       ServiceConfiguration config)
             throws PulsarServerException, PulsarClientException, MalformedURLException, ServletException,
             DeploymentException {
-        Map<String, Object> attributeMap = new HashMap<>();
+        Map<String, Object> attributeMap = new LinkedHashMap<>();
         attributeMap.put(WebService.ATTRIBUTE_PULSAR_NAME, this);
 
-        Map<String, Object> vipAttributeMap = new HashMap<>();
+        Map<String, Object> vipAttributeMap = new LinkedHashMap<>();
         vipAttributeMap.put(VipStatus.ATTRIBUTE_STATUS_FILE_PATH, config.getStatusFilePath());
         vipAttributeMap.put(VipStatus.ATTRIBUTE_IS_READY_PROBE, (Supplier<Boolean>) () -> {
             // Ensure the VIP status is only visible when the broker is fully initialized
             return state == State.Started;
         });
+
+        System.out.println("PRINTING TOPICS HERE");
+        System.out.println(TopicLookup.class);
+                System.out.println(org.apache.pulsar.broker.lookup.v2.TopicLookup.class);
 
         // Add admin rest resources
         webService.addRestResource("/",
@@ -1193,8 +1197,12 @@ public class PulsarService implements AutoCloseable, ShutdownService {
                 true, attributeMap, true, "org.apache.pulsar.broker.admin.v2");
         webService.addRestResources("/admin/v3",
                 true, attributeMap, true, "org.apache.pulsar.broker.admin.v3");
+//        webService.addRestResource("/lookup",
+//                true, attributeMap, true, org.glassfish.jersey.media.multipart.MultiPartFeature.class);
+//        webService.addRestResource("/lookup",
+//                true, attributeMap, true,  org.glassfish.jersey.media.multipart.MultiPartFeature.class, TopicLookup.class);
         webService.addRestResource("/lookup",
-                true, attributeMap, true,  TopicLookup.class,
+                true, attributeMap, true, org.glassfish.jersey.media.multipart.MultiPartFeature.class, TopicLookup.class,
                 org.apache.pulsar.broker.lookup.v2.TopicLookup.class);
         webService.addRestResource("/topics",
                 true, attributeMap, true, Topics.class);

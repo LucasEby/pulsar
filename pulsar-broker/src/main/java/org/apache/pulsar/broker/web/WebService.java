@@ -22,7 +22,9 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.jetty.JettyStatisticsCollector;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -115,6 +117,7 @@ public class WebService implements AutoCloseable {
         this.handlers = new ArrayList<>();
         this.pulsar = pulsar;
         ServiceConfiguration config = pulsar.getConfiguration();
+        System.out.println("LINE 118 IN WebService.java");
         this.webServiceExecutor = new WebExecutorThreadPool(
                 config.getNumHttpServerThreads(),
                 "pulsar-web",
@@ -201,32 +204,86 @@ public class WebService implements AutoCloseable {
 
     public void addRestResources(String basePath, boolean requiresAuthentication, Map<String, Object> attributeMap,
                                  boolean useSharedJsonMapperProvider, String... javaPackages) {
+//        System.out.println("ADD REST RESOURCES CALLED (Packages)");
         ResourceConfig config = new ResourceConfig();
         for (String javaPackage : javaPackages) {
+//            System.out.println("Package: " + javaPackage);
             config.packages(false, javaPackage);
         }
         addResourceServlet(basePath, requiresAuthentication, attributeMap, config, useSharedJsonMapperProvider);
+//        System.out.println("ADD REST RESOURCES END (Packages)");
     }
 
     public void addRestResource(String basePath, boolean requiresAuthentication, Map<String, Object> attributeMap,
                                 boolean useSharedJsonMapperProvider, Class<?>... resourceClasses) {
+//        System.out.println("ADD REST RESOURCES (classes) Called");
         ResourceConfig config = new ResourceConfig();
-        for (Class<?> resourceClass : resourceClasses) {
-            config.register(resourceClass);
+//        for (Class<?> resourceClass : resourceClasses) {
+//            System.out.println(resourceClass);
+//            config.register(resourceClass);
+//        }
+
+        // 1. Separate into “non-Apache” and “Apache” (or whatever rule you want)
+        List<Class<?>> preferred = new ArrayList<>();
+        List<Class<?>> others = new ArrayList<>();
+
+//        preferred.add(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
+        for (Class<?> rc : resourceClasses) {
+            String fqcn = rc.getName();  // e.g. "org.glassfish.jersey.media.multipart.MultiPartFeature"
+            if (!fqcn.startsWith("org.apache.pulsar")) {
+                preferred.add(rc);
+            } else if (fqcn.startsWith("org.apache.pulsar.broker.admin") && fqcn.endsWith(".Functions")) {
+                preferred.add(rc);
+            } else {
+                others.add(rc);
+            }
         }
+
+//        Comparator<Class<?>> byName = Comparator.comparing(Class::getName);
+//        preferred.sort(byName);
+//        others.sort(byName);
+//        preferred.add(MultiPartFeature.class);
+
+        // 2. Register preferred ones first
+        for (Class<?> rc : preferred) {
+//            System.out.println("Registering (preferred): " + rc.getName());
+            config.register(rc);
+        }
+
+        // 3. Then register the Pulsar / Apache ones
+        for (Class<?> rc : others) {
+//            System.out.println("Registering: " + rc.getName());
+            config.register(rc);
+        }
+
         addResourceServlet(basePath, requiresAuthentication, attributeMap, config, useSharedJsonMapperProvider);
+//        System.out.println("ADD REST RESOURCES (classes) End");
     }
 
     private void addResourceServlet(String basePath, boolean requiresAuthentication, Map<String, Object> attributeMap,
                                     ResourceConfig config, boolean useSharedJsonMapperProvider) {
         if (useSharedJsonMapperProvider){
+//            System.out.println("IN IF");
             JsonMapperProvider jsonMapperProvider = new JsonMapperProvider(sharedUnknownPropertyHandler);
-            config.register(jsonMapperProvider);
             config.register(UnrecognizedPropertyExceptionMapper.class);
+            config.register(jsonMapperProvider);
         } else {
+//            System.out.println("IN ELSE");
             config.register(JsonMapperProvider.class);
         }
         config.register(MultiPartFeature.class);
+
+//        log.warn(
+//                "Creating Jersey servlet for basePath='{}' with classes={} singletons={} properties={}",
+//                basePath,
+//                config.getClasses()
+//        );
+//
+//        System.out.println(
+//                "[DEBUG] Creating Jersey servlet for basePath='" + basePath + "'" +
+//                        "\n  Classes: " + config.getClasses()
+//        );
+
         ServletHolder servletHolder = new ServletHolder(new ServletContainer(config));
         servletHolder.setAsyncSupported(true);
         addServlet(basePath, servletHolder, requiresAuthentication, attributeMap);

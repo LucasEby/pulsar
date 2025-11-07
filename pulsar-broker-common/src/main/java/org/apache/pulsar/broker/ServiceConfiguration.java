@@ -21,8 +21,8 @@ package org.apache.pulsar.broker;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -4107,7 +4107,7 @@ public class ServiceConfiguration implements PulsarConfiguration {
     }
 
     public Map<String, String> lookupProperties() {
-        final var map = new HashMap<String, String>();
+        final var map = new LinkedHashMap<String, String>();
         properties.forEach((key, value) -> {
             if (key instanceof String && value instanceof String && ((String) key).startsWith(lookupPropertyPrefix)) {
                 map.put((String) key, (String) value);

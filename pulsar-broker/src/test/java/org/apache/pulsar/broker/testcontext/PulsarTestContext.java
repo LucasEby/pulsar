@@ -610,39 +610,51 @@ public class PulsarTestContext implements AutoCloseable {
             SpyConfig spyConfig = spyConfigBuilder.build();
             spyConfig(spyConfig);
             if (super.config == null) {
+                System.out.println("PTC Line 613");
                 config(svcConfig);
             }
             handlePreallocatePorts(super.config);
             if (configOverrideCustomizer != null || !configOverrideCalled) {
                 // call defaultOverrideServiceConfiguration if configOverrideCustomizer
                 // isn't explicitly set to null with `.configOverride(null)` call
+                System.out.println("PTC Line 620");
                 defaultOverrideServiceConfiguration(super.config);
             }
             if (configOverrideCustomizer != null) {
+                System.out.println("PTC Line 624");
                 configOverrideCustomizer.accept(super.config);
             }
             createWithMockZooKeeperOrTestZKServerInstances();
             if (super.managedLedgerStorage != null && !MockUtil.isMock(super.managedLedgerStorage)) {
+                System.out.println("PTC Line 629");
                 super.managedLedgerStorage = spyConfig.getManagedLedgerStorage().spy(super.managedLedgerStorage);
             }
             initializeCommonPulsarServices(spyConfig);
             initializePulsarServices(spyConfig, this);
             if (entryCacheEntryLengthFunction != null) {
+                System.out.println("PTC Line 635");
                 RangeEntryCacheManagerImpl entryCacheManager =
                         (RangeEntryCacheManagerImpl) super.pulsarService.getDefaultManagedLedgerFactory()
                                 .getEntryCacheManager();
                 entryCacheManager.setEntryLengthFunction(entryCacheEntryLengthFunction);
             }
             if (pulsarServiceCustomizer != null) {
+                System.out.println("PTC Line 642");
                 pulsarServiceCustomizer.accept(super.pulsarService);
             }
             if (super.startable) {
+                System.out.println("PTC Line 646");
+//                log.info("DEBUG: About to start PulsarService: {}, config: {}", super.pulsarService, super.config);
+                log.info("About to start PulsarService: {}", super.pulsarService.getClass().getName());
+                System.out.println("[PULSAR-DEBUG] About to start PulsarService: "
+                        + super.pulsarService.getClass().getName());
                 try {
                     super.pulsarService.start();
                 } catch (Exception e) {
                     callCloseables(super.closeables);
                     super.closeables.clear();
-                    throw new RuntimeException(e);
+                    throw new RuntimeException();
+                    // throw new RuntimeException(e);
                 }
             }
             if (otherContextToClose != null) {
@@ -927,12 +939,14 @@ public class PulsarTestContext implements AutoCloseable {
             } else {
                 openTelemetrySdkBuilderCustomizer = null;
             }
+            System.out.println("I THINK THE ISSUE IS HERE WHEN SETTING UP THE PULSAR SERVICE");
             PulsarService pulsarService = spyConfig.getPulsarService()
                     .spy(StartableTestPulsarService.class, spyConfig, builder.config, builder.localMetadataStore,
                             builder.configurationMetadataStore, compactionServiceFactory,
                             builder.brokerInterceptor,
                             bookKeeperClientFactory, builder.brokerServiceCustomizer,
                             openTelemetrySdkBuilderCustomizer);
+            System.out.println("I THINK THE ISSUE IS BEFORE HERE SOMEWHERE");
             if (compactionServiceFactory != null) {
                 compactionServiceFactory.initialize(pulsarService);
             }

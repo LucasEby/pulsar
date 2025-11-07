@@ -67,13 +67,17 @@ public class SpyConfig {
         public <T> T spy(Class<T> clazz, Object... args) {
             switch (this) {
                 case NONE:
+//                    System.out.println("SPY of type NONE");
                     // Use Mockito's internal class to instantiate the object
                     return new ConstructorInstantiator(false, args).newInstance(clazz);
                 case SPY:
+//                    System.out.println("SPY of type SPY");
                     return BrokerTestUtil.spyWithClassAndConstructorArgs(clazz, args);
                 case SPY_ALSO_INVOCATIONS:
+//                    System.out.println("SPY of type SPY_ALSO_INVOCATIONS");
                     return BrokerTestUtil.spyWithClassAndConstructorArgsRecordingInvocations(clazz, args);
                 default:
+//                    System.out.println("SPY of type Unknown spy type");
                     throw new UnsupportedOperationException("Unknown spy type: " + this);
             }
         }
