@@ -128,7 +128,18 @@ public class CmdGenerateDocs implements Callable<Integer> {
             sb.append(" options").append("\n```").append("\n\n");
             sb.append("|Flag|Description|Default|\n");
             sb.append("|---|---|---|\n");
-            List<ArgSpec> argSpecs = commander.getCommandSpec().args();
+
+            // Order the arguments by the (optionally) specified option order
+            List<ArgSpec> argSpecs = new ArrayList<>(commander.getCommandSpec().args());
+            argSpecs.sort((a, b) -> {
+                if (a instanceof OptionSpec && b instanceof OptionSpec) {
+                    OptionSpec optA = (OptionSpec) a;
+                    OptionSpec optB = (OptionSpec) b;
+                    return Integer.compare(optA.order(), optB.order());
+                }
+                return 0;
+            });
+
             argSpecs.forEach(option -> {
                 if (option.hidden() || !(option instanceof OptionSpec)) {
                     return;
