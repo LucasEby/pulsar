@@ -1852,11 +1852,31 @@ flexible messaging model and an intuitive client API.</description>
         </exclusion>
       </exclusions>
     </dependency>
+
+    <dependency>
+      <groupId>org.pastalab.fray</groupId>
+      <artifactId>fray-junit</artifactId>
+      <version>0.6.9</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
     <finalName>${project.artifactId}</finalName>
     <plugins>
+      <plugin>
+        <groupId>org.pastalab.fray.maven</groupId>
+        <artifactId>fray-plugins-maven</artifactId>
+        <version>0.6.9</version>
+        <executions>
+          <execution>
+            <id>prepare-fray</id>
+            <goals>
+              <goal>prepare-fray</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
